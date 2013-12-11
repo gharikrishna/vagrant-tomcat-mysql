@@ -1,18 +1,35 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.configure("2") do |config|
- config.vm.box = "precise32"
+Vagrant::Config.run do |config|
+  
+  # base box and URL where to get it if not present
+  config.vm.box = "precise32"
   config.vm.box_url = "http://files.vagrantup.com/precise32.box"
-  config.vm.provision :shell, :path => "bootstrap.sh"
-  config.vm.network :forwarded_port, host: 1234, guest: 80
 
+ #config.vm.box = "lucid64"
+ #config.vm.box_url = "http://files.vagrantup.com/lucid64.box"
 
-  config.vm.provision :puppet, :module_path => "manifests/modules" do |puppet|
-    puppet.manifests_path = "manifests"
-    puppet.manifest_file  = "default.pp"
+  # config for the appserver box
+  config.vm.define "appserver" do |app|
+    app.vm.boot_mode = :gui
+    app.vm.network :hostonly, "33.33.33.10"
+    app.vm.host_name = "appserver01.local"
+    app.vm.provision :puppet do |puppet|
+      puppet.manifests_path = "manifests"
+      puppet.manifest_file = "appserver.pp"
+    end
   end
-  config.vm.provider :virtualbox do |vb|
-    vb.customize ["modifyvm", :id, "--memory", "1024"]
+
+  # config for the dbserver box
+  config.vm.define "dbserver" do |db|
+    db.vm.boot_mode = :gui
+    db.vm.network :hostonly, "33.33.33.11"
+    db.vm.host_name = "dbserver01.local"
+    db.vm.provision :puppet do |puppet|
+      puppet.manifests_path = "manifests"
+      puppet.manifest_file = "dbserver.pp"
+    end
   end
+
 end
